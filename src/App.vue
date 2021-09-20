@@ -12,6 +12,7 @@ export default {
 	components: {
 		Chatbox,
 	},
+	methods: {},
 };
 </script>
 

@@ -22,12 +22,24 @@
 				</ul>
 			</div>
 			<div class="chat-input-container">
-				<input
-					type="text"
-					name="message"
-					v-model="message"
-					@keyup.enter="sendMsg()"
-				/>
+				<div v-if="username.length == 0">
+					<input
+						type="text"
+						name="username"
+						v-model="username"
+						@keyup.enter="setUsername()"
+						placeholder="enter your username"
+					/>
+				</div>
+				<div v-else>
+					<input
+						type="text"
+						name="message"
+						v-model="message"
+						@keyup.enter="sendMsg()"
+					/>
+				</div>
+
 				<button @click="sendMsg()">Send</button>
 			</div>
 		</div>
@@ -35,14 +47,16 @@
 </template>
 
 <script>
-import { nlp } from "../nlp";
+// import { nlp } from "../nlp";
+import SocketioService from "../services/socketio.service";
 export default {
 	name: "Chatbox",
 	data() {
 		return {
 			message: "",
 			msgList: [],
-			MY_TOKEN: "KGTIWVV5DYIS2NASXEQXD37QN5L63IIR",
+			username: "",
+			// MY_TOKEN: "KGTIWVV5DYIS2NASXEQXD37QN5L63IIR",
 		};
 	},
 	props: {
@@ -52,36 +66,22 @@ export default {
 		sendMsg() {
 			if (this.message != "") {
 				this.msgList.push(this.message);
+				SocketioService.sendMsg(this.message);
+				this.message = "";
+				console.log("in send msg");
 			}
-
-			const client = new this.$wit({ accessToken: this.MY_TOKEN });
-			client
-				.message(this.message, {})
-				.then((data) => {
-					console.log("Yay, got Wit.ai response: ");
-					console.log(JSON.stringify(data));
-					return data;
-				})
-				.then((wit) => {
-					let reply = nlp.handleMessage(wit.entities, wit.traits);
-					return reply;
-				})
-				.then((reply) => {
-					console.log(reply);
-					this.msgList.push(reply);
-					let len = this.msgList.length - 1;
-					console.log(typeof len, len);
-
-					setTimeout(() => {
-						let x = document.getElementsByClassName("message");
-						console.log(x.length);
-						x[len].scrollIntoView();
-					}, 300);
-				})
-				.catch(console.error);
-			this.message = "";
-			console.log("message is sent");
 		},
+		setUsername(name) {
+			this.username = name;
+			console.log("in set username");
+		},
+	},
+	created() {
+		SocketioService.setupSocketConnection();
+		this.username = "";
+	},
+	beforeUnmount() {
+		SocketioService.disconnect();
 	},
 };
 </script>
