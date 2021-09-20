@@ -133,7 +133,7 @@ button:hover {
 input[type="text"] {
 	position: absolute;
 	top: 420px;
-	right: 570px;
+	right: 650px;
 }
 .chat-list {
 	display: flex;
